@@ -1,0 +1,23 @@
+  {
+  "name": "13c_3csop",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/szilasii/13c_3csop.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/szilasii/13c_3csop/issues"
+  },
+  "homepage": "https://github.com/szilasii/13c_3csop#readme",
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  }
+}
