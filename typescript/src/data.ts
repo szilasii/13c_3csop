@@ -1,6 +1,6 @@
-[
+const data =  [
     {
-    id: null,
+    id: 1,
     nev: "Mendy",
     fajta: "keverék",
     nem: false,
@@ -72,3 +72,5 @@
       "https://www.tappancs.hu/sites/default/files/styles/full_width_gallery/public/media/brios20245.jpg",
   },
 ]
+
+export default data;

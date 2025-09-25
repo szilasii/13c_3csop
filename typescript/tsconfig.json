@@ -2,7 +2,7 @@
   // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
     // File Layout
-    "rootDir": "./src",
+    "rootDir": "typescript/src",
     "outDir": "./dist",
 
     // Environment Settings
@@ -21,8 +21,9 @@
     // "declarationMap": true,
 
     // // Stricter Typechecking Options
-    // "noUncheckedIndexedAccess": true,
-    // "exactOptionalPropertyTypes": true,
+     "noUncheckedIndexedAccess": true,
+     "exactOptionalPropertyTypes": true,
+     "strictPropertyInitialization" : true,
 
     // // Style Options
     // // "noImplicitReturns": true,
@@ -33,7 +34,7 @@
     // // "noPropertyAccessFromIndexSignature": true,
 
     // // Recommended Options
-    // "strict": true,
+     "strict": true,
     // "jsx": "react-jsx",
     // "verbatimModuleSyntax": true,
     // "isolatedModules": true,
