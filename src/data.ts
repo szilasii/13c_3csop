@@ -1,5 +1,4 @@
 
-
 const  data: any = [
     {
         "id": 1,
