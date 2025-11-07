@@ -1,32 +1,63 @@
-import data from "./data"
+
 import { Request } from "express"
+import config from "./config"
 
 
-export function root (_req: any, res: any) {
+export function root(_req: any, res: any) {
     res.send("Müködik az API szerver!!!")
 }
-export function getAllData(_req:any, res:any) {
-    res.status(200).send(data)
+export async function getAllData(_req: any, res: any) {
+
+    const conn = await config.connection;
+
+    // A simple SELECT query
+    try {
+        const [results] = await conn.query(
+            'SELECT * FROM dog'
+        );
+
+        if (results.length ===0) {
+            res.status(404).send("Nincs ilyen adat!")
+            return
+        }
+        res.status(200).send(results)
+    } catch (err) {
+        console.log(err);
+    }
+
+
+
+
 }
 
-export function getDataFromId(req:any, res:any) {
-    const id:number = parseInt(req.params.id)
+export async function getDataFromId(req: any, res: any) {
+    const id: number = parseInt(req.params.id)
     if (isNaN(id)) {
         res.status(400).send('Nem megfelelő az Id értéke!')
         return
     }
-    const dog = data.find((element:any) => element.id === id)
+const conn = await config.connection;
 
-    if (!dog) {
-        res.status(404).send('Nem találhat ilyen id-vel rendelkező elem')
-        return
+    // A simple SELECT query
+    try {
+        const [results] = await conn.query(
+            'SELECT * FROM dog where id = ?',[id]
+        );
+
+        if (results.length === 0) {
+            res.status(404).send("Nincs ilyen adat!")
+            return
+        }
+        res.status(200).send(results)
+    } catch (err) {
+        console.log(err);
     }
 
-    res.status(200).send(dog)
+    res.status(200).send()
 
 }
 
-export function insertData (req:Request,res:any) {
+export async function insertData(req: Request, res: any) {
     console.log(req.body)
 
     if (!req.body) {
@@ -35,44 +66,45 @@ export function insertData (req:Request,res:any) {
     }
 
     const dog = req.body
-    if(dog.nev === null || dog.nev === undefined || dog.nev==="") {
+    if (dog.nev === null || dog.nev === undefined || dog.nev === "") {
         res.status(400).send('Nem adott meg minden adatot!')
         return
     }
-    
-    if (data.length>0)
-    {
-        dog.id = Math.max(...data.map((d: any) => d.id)) + 1
-    } else {
-        dog.id = 1
+const conn = await config.connection;
+try {
+        const [results] = await conn.query(
+            'insert into dog values (null,?,?,?,?,?)', [dog.nev,dog.fajta, dog.nem ? 1:0,parseInt(dog.eletkor as unknown as string),dog.kepUrl]
+        ) as Array<any>
+        res.status(200).send(results.insertId)
+    } catch (err) {
+        console.log(err);
     }
-   
-   
+
     res.status(201).send(dog)
 }
 
-export const deleteDataFromId = (req:Request,res:any) => {
-     const id:number = parseInt(req.params.id)
+export const deleteDataFromId = async (req: Request, res: any) => {
+    const id: number = parseInt(req.params.id)
     if (isNaN(id)) {
         res.status(400).send('Nem megfelelő az Id értéke!')
         return
     }
 
- 
-
-    const index = data.findIndex((element:any) => element.id === id)
-
-    if (index === -1) {
-        res.status(404).send('Nem találhat ilyen id-vel rendelkező elem')
-        return
+const conn = await config.connection;
+try {
+       const [results] = await conn.query(
+            'delete FROM dog where id = ?',[id]
+        );
+        res.status(200).send(results.affectedRows)
+    } catch (err) {
+        console.log(err);
     }
-    data.splice(index,1)
-    res.status(204).
-    send()
+
+
 }
 
-export const putData = (req:Request,res:any) => {
-     const id:number = parseInt(req.params.id)
+export const putData = (req: Request, res: any) => {
+    const id: number = parseInt(req.params.id)
     if (isNaN(id)) {
         res.status(400).send('Nem megfelelő az Id értéke!')
         return
@@ -85,27 +117,19 @@ export const putData = (req:Request,res:any) => {
 
     let reqDog = req.body
 
-    if(reqDog.nev === null || reqDog.nev === undefined || reqDog.nev==="") {
+    if (reqDog.nev === null || reqDog.nev === undefined || reqDog.nev === "") {
         res.status(400).send('Nem adott meg minden adatot!')
         return
     }
 
 
-    const index = data.findIndex((element:any) => element.id === id)
 
-    if (index === -1) {
-        insertData(req,res)
-        return
-    }
-
-    reqDog.id = id
-    data[index] = reqDog
-    res.status(201).send(data)
+    res.status(201).send()
 
 }
 
-export const patchData = (req:Request,res:any) => {
-     const id:number = parseInt(req.params.id)
+export const patchData = (req: Request, res: any) => {
+    const id: number = parseInt(req.params.id)
     if (isNaN(id)) {
         res.status(400).send('Nem megfelelő az Id értéke!')
         return
@@ -116,11 +140,7 @@ export const patchData = (req:Request,res:any) => {
         return
     }
 
-    const index = data.findIndex((element:any) => element.id === id)
-     if (index === -1) {
-        res.status(404).send('Nem találhat ilyen id-vel rendelkező elem')
-        return
-    }
+
 
     let reqDog = req.body
 
@@ -131,14 +151,14 @@ export const patchData = (req:Request,res:any) => {
     // data[index].kepUrl  = reqDog.kepUrl || data[index].kepUrl
 
 
-    Object.assign(data[index], {
-        nev: reqDog.nev || data[index].nev,
-        fajta: reqDog.fajta || data[index].fajta,
-        eletkor: reqDog.eletkor || data[index].eletkor,
-        nem: reqDog.nem || data[index].nem,
-        kepUrl: reqDog.kepUrl || data[index].kepUrl
-    })
+    // Object.assign(data[index], {
+    //     nev: reqDog.nev || data[index].nev,
+    //     fajta: reqDog.fajta || data[index].fajta,
+    //     eletkor: reqDog.eletkor || data[index].eletkor,
+    //     nem: reqDog.nem || data[index].nem,
+    //     kepUrl: reqDog.kepUrl || data[index].kepUrl
+    // })
 
 
-    res.status(201).send(data)
+    res.status(201).send()
 }
