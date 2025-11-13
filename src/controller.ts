@@ -1,6 +1,7 @@
 
 import { Request } from "express"
 import config from "./config"
+import Dog, { IDog } from "./dog";
 
 
 export function root(_req: any, res: any) {
@@ -16,7 +17,7 @@ export async function getAllData(_req: any, res: any) {
             'SELECT * FROM dog'
         );
 
-        if (results.length ===0) {
+        if (results.length === 0) {
             res.status(404).send("Nincs ilyen adat!")
             return
         }
@@ -36,12 +37,12 @@ export async function getDataFromId(req: any, res: any) {
         res.status(400).send('Nem megfelelő az Id értéke!')
         return
     }
-const conn = await config.connection;
+    const conn = await config.connection;
 
     // A simple SELECT query
     try {
         const [results] = await conn.query(
-            'SELECT * FROM dog where id = ?',[id]
+            'SELECT * FROM dog where id = ?', [id]
         );
 
         if (results.length === 0) {
@@ -65,15 +66,15 @@ export async function insertData(req: Request, res: any) {
         return
     }
 
-    const dog = req.body
-    if (dog.nev === null || dog.nev === undefined || dog.nev === "") {
+    const dog = new Dog(req.body as unknown as IDog)
+    if (dog.name === null || dog.name === undefined || dog.name === "") {
         res.status(400).send('Nem adott meg minden adatot!')
         return
     }
-const conn = await config.connection;
-try {
+    const conn = await config.connection;
+    try {
         const [results] = await conn.query(
-            'insert into dog values (null,?,?,?,?,?)', [dog.nev,dog.fajta, dog.nem ? 1:0,parseInt(dog.eletkor as unknown as string),dog.kepUrl]
+            'insert into dog values (null,?,?,?,?,?)', [dog.name, dog.breed, dog.gender, dog.age, dog.picurl]
         ) as Array<any>
         res.status(200).send(results.insertId)
     } catch (err) {
@@ -90,10 +91,10 @@ export const deleteDataFromId = async (req: Request, res: any) => {
         return
     }
 
-const conn = await config.connection;
-try {
-       const [results] = await conn.query(
-            'delete FROM dog where id = ?',[id]
+    const conn = await config.connection;
+    try {
+        const [results] = await conn.query(
+            'delete FROM dog where id = ?', [id]
         );
         res.status(200).send(results.affectedRows)
     } catch (err) {
@@ -103,7 +104,7 @@ try {
 
 }
 
-export const putData = (req: Request, res: any) => {
+export const putData = async (req: Request, res: any) => {
     const id: number = parseInt(req.params.id)
     if (isNaN(id)) {
         res.status(400).send('Nem megfelelő az Id értéke!')
@@ -115,20 +116,44 @@ export const putData = (req: Request, res: any) => {
         return
     }
 
-    let reqDog = req.body
 
-    if (reqDog.nev === null || reqDog.nev === undefined || reqDog.nev === "") {
-        res.status(400).send('Nem adott meg minden adatot!')
-        return
+
+    let reqDog: any = new Dog(req.body as unknown as IDog)
+
+    const allowedField = ['name', 'breed', 'gender', 'age', 'picurl']
+    const keys = Object.keys(reqDog).filter(key => allowedField.includes(key))
+    if (keys.length === 0) {
+        return res.status(400).send({ error: 103, message: "Nincs frisítendő mező!" })
     }
 
+    const updateString = keys.map(key => `${key} = ?`).join(', ')
+    const values = keys.map(key => reqDog[key])
+    values.push(id)
+    const conn = await config.connection;
 
 
-    res.status(201).send()
+    const sqlCmd = `update dog set ${updateString} where id=?`
+
+    console.log(sqlCmd)
+
+    try {
+        const [results] = await conn.query(
+            sqlCmd, values
+        );
+
+        if (results.affectedRows != 0) {
+            return res.status(200).send({ success: true, message: "Az adatok modosítása sikeresen megtörtént!" })
+
+        }
+        insertData(req, res)
+
+    } catch (err) {
+        console.log(err);
+    }
 
 }
 
-export const patchData = (req: Request, res: any) => {
+export const patchData = async (req: Request, res: any) => {
     const id: number = parseInt(req.params.id)
     if (isNaN(id)) {
         res.status(400).send('Nem megfelelő az Id értéke!')
@@ -142,23 +167,36 @@ export const patchData = (req: Request, res: any) => {
 
 
 
-    let reqDog = req.body
+    let reqDog: any = new Dog(req.body as unknown as IDog)
 
-    // data[index].nev = reqDog.nev || data[index].nev
-    // data[index].fajta  = reqDog.fajta || data[index].fajta
-    // data[index].eletkor  = reqDog.eletkor || data[index].eletkor
-    // data[index].nem  = reqDog.nem || data[index].nem
-    // data[index].kepUrl  = reqDog.kepUrl || data[index].kepUrl
+    const allowedField = ['name', 'breed', 'gender', 'age', 'picurl']
+    const keys = Object.keys(reqDog).filter(key => allowedField.includes(key))
+    if (keys.length === 0) {
+        return res.status(400).send({ error: 103, message: "Nincs frisítendő mező!" })
+    }
 
-
-    // Object.assign(data[index], {
-    //     nev: reqDog.nev || data[index].nev,
-    //     fajta: reqDog.fajta || data[index].fajta,
-    //     eletkor: reqDog.eletkor || data[index].eletkor,
-    //     nem: reqDog.nem || data[index].nem,
-    //     kepUrl: reqDog.kepUrl || data[index].kepUrl
-    // })
+    const updateString = keys.map(key => `${key} = ?`).join(', ')
+    const values = keys.map(key => reqDog[key])
+    values.push(id)
+    const conn = await config.connection;
 
 
-    res.status(201).send()
+    const sqlCmd = `update dog set ${updateString} where id=?`
+
+    console.log(sqlCmd)
+
+    try {
+        const [results] = await conn.query(
+            sqlCmd, values
+        );
+
+        if (results.affectedRows != 0) {
+            return res.status(200).send({ success: true, message: "Az adatok modosítása sikeresen megtörtént!" })
+
+        }
+        res.status(200).send({ success: false, message: "Adatmódosítás nem történt" })
+
+    } catch (err) {
+        console.log(err);
+    }
 }
