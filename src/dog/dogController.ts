@@ -1,6 +1,6 @@
 
 import { Request } from "express"
-import config from "./config"
+import config from "../config/config"
 import Dog, { IDog } from "./dog";
 
 
