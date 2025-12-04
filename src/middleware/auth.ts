@@ -7,12 +7,18 @@ const verifyToken = (req:any,res:any,next:any) => {
         return res.status(403).send("Token szükséges a hozzáféréshez")
     }
     try {
-        if(!config.jwSecret) {
-
+        if(!config.jwtSecret) {
+           return res.status(403).send("Hiba van a titkos kulcsal!") 
         }
-    }catch(e) {}
+        const decodedToken = jwt.verify(token,config.jwtSecret)
+        req.user = decodedToken
+        console.log(decodedToken)
+        return next()
+    }catch(e) {
+        console.log(e)
+    }
 
-    next()
+    res.status(401).send("Az auth nem sikerült!")
 }
 
 
