@@ -16,7 +16,7 @@ const uploadFile = multer ({
 const uploadFiles = multer ({
     storage: storage,
     limits:{fileSize: config.fileSize}
-}).array("file",10)
+}).array("files",10)
 
 export const uploadMiddleware = util.promisify(uploadFile)
 export const uploadMiddlewareMultiple = util.promisify(uploadFiles)
