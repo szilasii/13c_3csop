@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+  <ul id="messages"></ul>
+    <script>
+      const socket = new WebSocket("ws://10.5.0.4:8080")
+      socket.onopen = () => {
+        socket.send("Hali szerver")
+      }  
+      socket.onmessage = (event) => {
+        console.log("Szerver válasz: ",event.data)
+        addMessage(event.data)
+      }
+
+      function send() {
+        const input = document.getElementById("inputText")
+        socket.send(input.value)
+        input.value = ""
+
+      }
+      const list = document.getElementById("messages")
+      function addMessage(text) {
+        const li = document.createElement("li")
+        li.textContent = text
+        list.appendChild(li)
+      }
+
+    </script>
+    
+    <input type="text" name="inputText" id="inputText">
+    <input type="button" value="Küld" onclick = 'send()'>
+    
+
+</body>
+</html>
